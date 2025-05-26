@@ -11,14 +11,16 @@ FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄
 
 본 프로젝트는 운영체제 수업의 일환으로 진행된 팀 프로젝트이며, 다양한 CPU 스케줄링 알고리즘을 구현하고 공정성, 응답 시간, 대기 시간, 컨텍스트 스위치 수 등을 비교 분석하는 것을 목적으로 합니다.
 
+강의에서 배운 소수의 프로세스가 아닌 다수(5000개)의 프로세스를 스케쥴러 시뮬레이터로 구동해보았을때 통계를 구해보기 위해 만들어봤습니다.
+
 ---
 
 ## 👥 팀원 소개
 
-진성민
-박정훈
-강민우
-김진우
+진성민 - SJF, SRTF, 스케쥴러 구현 및 통계 정리
+박정훈 - R-R, Lottery 스케쥴러 구현 및 발표자료 준비
+강민우 - Mlfq 구현 및 자료조사
+김진우 - FCFS , Stride 구현 및 발표
 
 ---
 
@@ -29,7 +31,6 @@ FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄
 - 🔄 Round Robin (타임 퀀텀 조정 가능)
 - 🎫 Stride / Lottery 스케줄링 (티켓 기반 공정 스케줄링)
 - 📚 MLFQ (다단계 피드백 큐)
-- ⚖️ CFS (공정 스케줄링)
 - 📈 평균 응답 시간 / 대기 시간 / 반환 시간 출력
 - 🔁 컨텍스트 스위치 횟수 추적
 
@@ -42,11 +43,14 @@ FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄
 
 ### 2. 프로세스 입력 파일 생성
 
-- gcc proccess.c
+- gcc proccess.c 
 - ./a.out
 
 ### 3. 파일 소개
 
 - process.c → PID 0부터 4999까지의 총 5000개 프로세스를 랜덤하게 생성합니다.
 
-- main.c → 스케줄링 알고리즘을 통해 평균 Response Time, Turnaround Time, Waiting Time을 계산하고, Context Switch 발생 횟수와 Starvation 비율을 분석합니다.
+- main.c → 스케줄링 알고리즘을 통해 평균 Response Time, Turnaround Time, Waiting Time을 계산하고, Context Switch 발생 횟수를 분석합니다.
+
+### 4. 개선사항
+- CFS 공정 스케쥴링 구현
