@@ -42,5 +42,11 @@ FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄
 
 ### 2. 프로세스 입력 파일 생성
 
-gcc proccess.c
-./a.out
+- gcc proccess.c
+- ./a.out
+
+### 3. 파일 소개
+
+- process.c → PID 0부터 4999까지의 총 5000개 프로세스를 랜덤하게 생성합니다.
+
+- main.c → 스케줄링 알고리즘을 통해 평균 Response Time, Turnaround Time, Waiting Time을 계산하고, Context Switch 발생 횟수와 Starvation 비율을 분석합니다.
