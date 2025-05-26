@@ -1,9 +1,24 @@
 # OS Projects
 
-# 🧠 CPU 스케줄링 시뮬레이터
+# 🧠 CPU Scheduling Simulator
 
-C 언어로 작성된 CPU 스케줄러 시뮬레이터입니다.  
-FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄링 알고리즘을 구현하였으며, 각 알고리즘의 응답 시간, 대기 시간, 반환 시간, 컨텍스트 스위치 횟수, starvation 비율 등을 비교할 수 있습니다.
+C 언어 기반으로 구현된 운영체제 스케줄링 시뮬레이터입니다.  
+FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄링 알고리즘을 비교하고 성능 지표를 측정할 수 있습니다.
+
+---
+
+## 🗂️ 개요
+
+본 프로젝트는 운영체제 수업의 일환으로 진행된 팀 프로젝트이며, 다양한 CPU 스케줄링 알고리즘을 구현하고 공정성, 응답 시간, 대기 시간, 컨텍스트 스위치 수 등을 비교 분석하는 것을 목적으로 합니다.
+
+---
+
+## 👥 팀원 소개
+
+진성민
+박정훈
+강민우
+김진우
 
 ---
 
@@ -16,7 +31,6 @@ FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄
 - 📚 MLFQ (다단계 피드백 큐)
 - ⚖️ CFS (공정 스케줄링)
 - 📈 평균 응답 시간 / 대기 시간 / 반환 시간 출력
-- 🔍 Starvation 감지 및 비율 출력
 - 🔁 컨텍스트 스위치 횟수 추적
 
 ---
@@ -24,6 +38,9 @@ FCFS, SJF, SRTF, Round Robin, Stride, Lottery, MLFQ, CFS 등 다양한 스케줄
 ## 🚀 사용 방법
 
 ### 1. 요구 사항
-- GCC 컴파일러
-- 프로세스 입력 파일 process.c 실행 후 processes.txt 생성
-- main.c를 실행 시킴
+- GCC 컴파일러 (리눅스 환경 추천)
+
+### 2. 프로세스 입력 파일 생성
+
+gcc proccess.c
+./a.out
