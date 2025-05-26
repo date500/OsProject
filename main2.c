@@ -32,9 +32,14 @@ void calculate_averages(Process p[], int n)
            total_response / n, total_waiting / n, total_turnaround / n);
 }
 
-void fcfs(Process p[], int n)
+void print_context_switches(int count)
 {
-    int time = 0;
+    printf("Context Switches: %d\n", count);
+}
+
+void fcfs(Process p[], int n, int *context_switch_count)
+{
+    int time = 0, prev = -1;
     for (int i = 0; i < n; i++)
         for (int j = i + 1; j < n; j++)
             if (p[i].arrival > p[j].arrival)
@@ -48,18 +53,21 @@ void fcfs(Process p[], int n)
     {
         if (time < p[i].arrival)
             time = p[i].arrival;
+        if (prev != -1 && prev != p[i].pid)
+            (*context_switch_count)++;
         p[i].start = time;
         p[i].finish = time + p[i].burst;
         p[i].turnaround = p[i].finish - p[i].arrival;
         p[i].waiting = p[i].turnaround - p[i].burst;
         p[i].completed = true;
         time = p[i].finish;
+        prev = p[i].pid;
     }
 }
 
-void sjf(Process p[], int n)
+void sjf(Process p[], int n, int *context_switch_count)
 {
-    int time = 0, done = 0;
+    int time = 0, done = 0, prev = -1;
     while (done < n)
     {
         int idx = -1, min = INT_MAX;
@@ -72,19 +80,22 @@ void sjf(Process p[], int n)
             continue;
         }
 
+        if (prev != -1 && prev != p[idx].pid)
+            (*context_switch_count)++;
         p[idx].start = time;
         time += p[idx].burst;
         p[idx].finish = time;
-        p[idx].turnaround = p[idx].finish - p[idx].arrival;
+        p[idx].turnaround = time - p[idx].arrival;
         p[idx].waiting = p[idx].turnaround - p[idx].burst;
         p[idx].completed = true;
         done++;
+        prev = p[idx].pid;
     }
 }
 
-void srtf(Process p[], int n)
+void srtf(Process p[], int n, int *context_switch_count)
 {
-    int time = 0, done = 0;
+    int time = 0, done = 0, prev = -1;
     for (int i = 0; i < n; i++)
         p[i].remaining = p[i].burst;
 
@@ -100,11 +111,13 @@ void srtf(Process p[], int n)
             continue;
         }
 
+        if (prev != -1 && prev != idx)
+            (*context_switch_count)++;
         if (p[idx].remaining == p[idx].burst)
             p[idx].start = time;
-
         p[idx].remaining--;
         time++;
+        prev = idx;
 
         if (p[idx].remaining == 0)
         {
@@ -117,12 +130,11 @@ void srtf(Process p[], int n)
     }
 }
 
-void round_robin(Process p[], int n, int quantum)
+void round_robin(Process p[], int n, int quantum, int *context_switch_count)
 {
-    int time = 0, done = 0;
+    int time = 0, done = 0, prev = -1;
     int queue[MAX * 10], front = 0, rear = 0;
     bool in_queue[MAX] = {false};
-
     for (int i = 0; i < n; i++)
         p[i].remaining = p[i].burst;
 
@@ -148,11 +160,12 @@ void round_robin(Process p[], int n, int quantum)
         }
 
         int idx = queue[front++];
-        int exec = p[idx].remaining < quantum ? p[idx].remaining : quantum;
+        if (prev != -1 && prev != idx)
+            (*context_switch_count)++;
 
+        int exec = p[idx].remaining < quantum ? p[idx].remaining : quantum;
         if (p[idx].remaining == p[idx].burst)
             p[idx].start = time > p[idx].arrival ? time : p[idx].arrival;
-
         time = time > p[idx].arrival ? time : p[idx].arrival;
         time += exec;
         p[idx].remaining -= exec;
@@ -176,57 +189,76 @@ void round_robin(Process p[], int n, int quantum)
         {
             queue[rear++] = idx;
         }
+        prev = idx;
     }
 }
 
-void stride(Process p[], int n)
+void stride(Process p[], int n, int *context_switch_count)
 {
-    int time = 0, done = 0;
+    int time = 0, done = 0, prev = -1;
     for (int i = 0; i < n; i++)
     {
         p[i].remaining = p[i].burst;
-        p[i].tickets = p[i].tickets > 0 ? p[i].tickets : 1;
+        p[i].tickets = (p[i].tickets > 0) ? p[i].tickets : 1;
         p[i].stride = BIG_NUMBER / p[i].tickets;
         p[i].pass = 0;
-    }
-
-    while (done < n)
-    {
-        int idx = -1, min = INT_MAX;
-        for (int i = 0; i < n; i++)
-            if (!p[i].completed && p[i].arrival <= time && p[i].pass < min)
-                min = p[i].pass, idx = i;
-
-        if (idx == -1)
-        {
-            time++;
-            continue;
-        }
-
-        p[idx].start = p[idx].start == -1 ? time : p[idx].start;
-        time += p[idx].burst;
-        p[idx].finish = time;
-        p[idx].turnaround = time - p[idx].arrival;
-        p[idx].waiting = p[idx].turnaround - p[idx].burst;
-        p[idx].pass += p[idx].stride;
-        p[idx].completed = true;
-        done++;
-    }
-}
-
-void lottery(Process p[], int n)
-{
-    int time = 0, done = 0;
-    for (int i = 0; i < n; i++)
-    {
-        p[i].remaining = p[i].burst;
-        p[i].tickets = (p[i].tickets > 0) ? p[i].tickets : 1; // 최소 1장
         p[i].start = -1;
     }
 
     while (done < n)
     {
-        // 티켓 합산
+        // pass가 가장 작은 실행 가능한 프로세스 찾기
+        int idx = -1, min_pass = INT_MAX;
+        for (int i = 0; i < n; i++)
+        {
+            if (!p[i].completed && p[i].arrival <= time && p[i].pass < min_pass)
+            {
+                min_pass = p[i].pass;
+                idx = i;
+            }
+        }
+
+        if (idx == -1)
+        { // 실행할 게 없으면 시간 경과
+            time++;
+            continue;
+        }
+
+        if (prev != -1 && prev != idx)
+            (*context_switch_count)++;
+
+        if (p[idx].start == -1)
+            p[idx].start = time;
+
+        // 한 번에 1만큼 실행 (preemptive)
+        p[idx].remaining--;
+        time++;
+        p[idx].pass += p[idx].stride;
+        prev = idx;
+
+        if (p[idx].remaining == 0)
+        {
+            p[idx].finish = time;
+            p[idx].turnaround = time - p[idx].arrival;
+            p[idx].waiting = p[idx].turnaround - p[idx].burst;
+            p[idx].completed = true;
+            done++;
+        }
+    }
+}
+
+void lottery(Process p[], int n, int quantum, int *context_switch_count)
+{
+    int time = 0, done = 0, prev = -1;
+    for (int i = 0; i < n; i++)
+    {
+        p[i].remaining = p[i].burst;
+        p[i].tickets = (rand() % 10) + 1;
+        p[i].start = -1;
+    }
+
+    while (done < n)
+    {
         int total_tickets = 0;
         for (int i = 0; i < n; i++)
             if (!p[i].completed && p[i].arrival <= time)
@@ -238,51 +270,48 @@ void lottery(Process p[], int n)
             continue;
         }
 
-        int winning_ticket = rand() % total_tickets;
-        int current_sum = 0;
-        int idx = -1;
-
+        int winner = rand() % total_tickets, sum = 0, idx = -1;
         for (int i = 0; i < n; i++)
         {
             if (!p[i].completed && p[i].arrival <= time)
             {
-                current_sum += p[i].tickets;
-                if (current_sum > winning_ticket)
+                sum += p[i].tickets;
+                if (sum > winner)
                 {
                     idx = i;
                     break;
                 }
             }
         }
+        if (idx == -1)
+            continue;
 
-        if (idx != -1)
+        if (prev != -1 && prev != idx)
+            (*context_switch_count)++;
+
+        if (p[idx].remaining == p[idx].burst)
+            p[idx].start = time;
+
+        int exec = (p[idx].remaining < quantum) ? p[idx].remaining : quantum;
+        p[idx].remaining -= exec;
+        time += exec;
+
+        if (p[idx].remaining == 0)
         {
-            if (p[idx].start == -1)
-                p[idx].start = time;
-
-            p[idx].remaining--;
-            time++;
-
-            if (p[idx].remaining == 0)
-            {
-                p[idx].finish = time;
-                p[idx].turnaround = time - p[idx].arrival;
-                p[idx].waiting = p[idx].turnaround - p[idx].burst;
-                p[idx].completed = true;
-                done++;
-            }
+            p[idx].finish = time;
+            p[idx].turnaround = time - p[idx].arrival;
+            p[idx].waiting = p[idx].turnaround - p[idx].burst;
+            p[idx].completed = true;
+            done++;
         }
-        else
-        {
-            time++;
-        }
+        prev = idx;
     }
 }
 
-void mlfq(Process p[], int n)
+void mlfq(Process p[], int n, int *context_switch_count)
 {
     int quantum[NUM_QUEUES] = {4, 8, 16};
-    int time = 0, done = 0;
+    int time = 0, done = 0, prev = -1;
     for (int i = 0; i < n; i++)
     {
         p[i].remaining = p[i].burst;
@@ -309,6 +338,8 @@ void mlfq(Process p[], int n)
             time++;
             continue;
         }
+        if (prev != -1 && prev != p[idx].pid)
+            (*context_switch_count)++;
 
         p[idx].start = p[idx].start == -1 ? time : p[idx].start;
         int slice = p[idx].remaining < quantum[p[idx].queue_level] ? p[idx].remaining : quantum[p[idx].queue_level];
@@ -325,12 +356,13 @@ void mlfq(Process p[], int n)
         }
         else if (p[idx].queue_level < NUM_QUEUES - 1)
             p[idx].queue_level++;
+        prev = p[idx].pid;
     }
 }
 
-void cfs(Process p[], int n)
+void cfs(Process p[], int n, int *context_switch_count)
 {
-    int time = 0, done = 0;
+    int time = 0, done = 0, prev = -1;
     for (int i = 0; i < n; i++)
     {
         p[i].remaining = p[i].burst;
@@ -344,12 +376,14 @@ void cfs(Process p[], int n)
         for (int i = 0; i < n; i++)
             if (!p[i].completed && p[i].arrival <= time && p[i].vruntime < min)
                 min = p[i].vruntime, idx = i;
-
         if (idx == -1)
         {
             time++;
             continue;
         }
+
+        if (prev != -1 && prev != p[idx].pid)
+            (*context_switch_count)++;
 
         p[idx].start = p[idx].start == -1 ? time : p[idx].start;
         p[idx].remaining--;
@@ -364,6 +398,7 @@ void cfs(Process p[], int n)
             p[idx].completed = true;
             done++;
         }
+        prev = p[idx].pid;
     }
 }
 
@@ -387,22 +422,26 @@ int load_processes(Process p[], const char *filename)
     return count;
 }
 
-void run_and_report(void (*scheduler)(Process[], int), Process original[], int n, const char *name)
+void run_and_report(void (*scheduler)(Process[], int, int *), Process original[], int n, const char *name)
 {
     Process temp[MAX];
     memcpy(temp, original, sizeof(Process) * n);
-    scheduler(temp, n);
+    int context_switch_count = 0;
+    scheduler(temp, n, &context_switch_count);
     printf("\n[%s Scheduling]\n", name);
     calculate_averages(temp, n);
+    print_context_switches(context_switch_count);
 }
 
-void run_and_report_rr(void (*scheduler)(Process[], int, int), Process original[], int n, const char *name, int quantum)
+void run_and_report_rr(void (*scheduler)(Process[], int, int, int *), Process original[], int n, const char *name, int quantum)
 {
     Process temp[MAX];
     memcpy(temp, original, sizeof(Process) * n);
-    scheduler(temp, n, quantum);
+    int context_switch_count = 0;
+    scheduler(temp, n, quantum, &context_switch_count);
     printf("\n[%s (Quantum=%d)]\n", name, quantum);
     calculate_averages(temp, n);
+    print_context_switches(context_switch_count);
 }
 
 int main()
@@ -421,7 +460,7 @@ int main()
     run_and_report(srtf, p, n, "SRTF");
     run_and_report_rr(round_robin, p, n, "Round Robin", 4);
     run_and_report(stride, p, n, "Stride");
-    run_and_report(lottery, p, n, "Lottery");
+    run_and_report_rr(lottery, p, n, "Lottery", 4);
     run_and_report(mlfq, p, n, "MLFQ");
     run_and_report(cfs, p, n, "CFS");
 
