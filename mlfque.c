@@ -5,7 +5,7 @@
 
 #define MAX 6000
 #define NUM_QUEUES 3
-#define BOOST_INTERVAL 50
+#define BOOST_INTERVAL 20
 #define STARVATION_THRESHOLD 1000
 
 // Process 구조체 정의
