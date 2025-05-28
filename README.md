@@ -71,9 +71,10 @@ MLFQ 알고리즘을 통해 다양한 통계를 확인할 수 있습니다.
 실행된 MLFQ 알고리즘의 결과 예시는 다음과 같습니다:
 
 ```
-Response: 2674.89  Waiting: 3085.95  Turnaround: 4778.50
-Total Context Switches: 7629
-Starvation Rate: 21.22%
+[MLFQ 결과]
+Response: 500.42  Waiting: 438.55  Turnaround: 552.12
+Total Context Switches: 6074
+Starvation Rate: 7.26%
 ```
 
 ---
@@ -95,4 +96,5 @@ Starvation Rate: 21.22%
 
 * **mlfque.c** → MLFQ 스케줄링 알고리즘을 통해 평균 Response Time, Turnaround Time, Waiting Time을 계산하고, Context Switch 발생 횟수 및 Starvation 비율을 분석합니다.
 
+* **mlfqno.c** → 동일한 통계 결과를 제공하지만, Priority Boost 기능이 빠져 있어 Starvation 비율을 비교할 수 있습니다.
 ---
