@@ -64,10 +64,11 @@ bool round_robin_queue(Process p[], Queue *q, int quantum, int *time, int *conte
     int idx = dequeue(q); // 큐에서 프로세스 인덱스 꺼내기
     Process *current = &p[idx];
 
-    int slice = (current->remaining < quantum) ? current->remaining : quantum; // 슬라이스 크기 결정
-
+    // 프로세스가 처음 실행되면 start 시간을 기록
     if (current->start == -1)
-        current->start = *time; // 시작 시간 기록
+        current->start = *time;
+
+    int slice = (current->remaining < quantum) ? current->remaining : quantum; // 슬라이스 크기 결정
 
     current->remaining -= slice;
     current->used_time += slice;
@@ -104,6 +105,9 @@ void mlfq_with_boost(Process p[], int n, int *context_switches)
 {
     int quantum[NUM_QUEUES] = {10, 20, 40}; // 각 큐별 quantum 값
     int time = 0, done = 0, last_boost_time = 0;
+
+    int first_process_arrival = p[0].arrival;
+    time = first_process_arrival;
 
     Queue queues[NUM_QUEUES];
     for (int i = 0; i < NUM_QUEUES; i++)
@@ -180,7 +184,7 @@ void calculate_averages(Process p[], int n, int context_switches)
     {
         total_waiting += p[i].waiting;
         total_turnaround += p[i].turnaround;
-        total_response += p[i].start - p[i].arrival;
+        total_response += p[i].start - p[i].arrival; // Response = start - arrival
 
         if (p[i].waiting > STARVATION_THRESHOLD)
             starvation_count++;
