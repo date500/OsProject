@@ -5,7 +5,7 @@
 
 #define MAX 6000
 #define NUM_QUEUES 3
-#define BOOST_INTERVAL 150
+#define BOOST_INTERVAL 50
 #define STARVATION_THRESHOLD 1000
 
 // Process 구조체 정의
@@ -106,9 +106,28 @@ void mlfq_with_boost(Process p[], int n, int *context_switches)
     int quantum[NUM_QUEUES] = {10, 20, 40}; // 각 큐별 quantum 값
     int time = 0, done = 0, last_boost_time = 0;
 
-    int first_process_arrival = p[0].arrival;
-    time = first_process_arrival;
+    // 최소 도착 시간을 찾음
+    int min_arrival = p[0].arrival;
+    for (int i = 1; i < n; i++)
+    {
+        if (p[i].arrival < min_arrival)
+        {
+            min_arrival = p[i].arrival;
+        }
+    }
+    time = min_arrival;
 
+    // 첫 번째 도착 프로세스의 start 시간을 도착 시간에 맞춰 설정
+    for (int i = 0; i < n; i++)
+    {
+        if (p[i].arrival == min_arrival)
+        {
+            p[i].start = time; // 첫 번째 프로세스의 실행 시간 조정
+            break;
+        }
+    }
+
+    // 큐 초기화
     Queue queues[NUM_QUEUES];
     for (int i = 0; i < NUM_QUEUES; i++)
         init_queue(&queues[i]);
@@ -118,7 +137,7 @@ void mlfq_with_boost(Process p[], int n, int *context_switches)
     {
         p[i].remaining = p[i].burst;
         p[i].queue_level = 0;
-        p[i].start = -1;
+        p[i].start = -1; // 초기 start 값은 -1로 설정
         p[i].completed = false;
         p[i].used_time = 0;
     }
@@ -184,7 +203,12 @@ void calculate_averages(Process p[], int n, int context_switches)
     {
         total_waiting += p[i].waiting;
         total_turnaround += p[i].turnaround;
-        total_response += p[i].start - p[i].arrival; // Response = start - arrival
+
+        // 응답 시간 처리: start == -1인 경우 0으로 처리
+        int response = (p[i].start == -1) ? 0 : (p[i].start - p[i].arrival);
+        if (response < 0)
+            response = 0; // 음수는 0으로 처리
+        total_response += response;
 
         if (p[i].waiting > STARVATION_THRESHOLD)
             starvation_count++;
