@@ -3,7 +3,7 @@
 #include <time.h>
 
 #define NUM_PROCESSES 5000
-#define MAX_PID 4999
+#define MAX_PID 9999 // PID 범위를 더 확장
 
 int main()
 {
@@ -14,20 +14,20 @@ int main()
         return 1;
     }
 
-    srand(time(NULL)); // 랜덤 시드 초기화
+    srand(time(NULL));
 
-    int used_pid[MAX_PID + 1] = {0}; // 중복 방지용
-
+    int used_pid[MAX_PID + 1] = {0};
     int count = 0;
+
     while (count < NUM_PROCESSES)
     {
         int pid = rand() % (MAX_PID + 1);
         if (used_pid[pid])
-            continue; // 이미 사용된 pid는 skip
+            continue;
         used_pid[pid] = 1;
 
-        int arrival = rand() % 1000;   // 도착 시간: 0~999
-        int burst = (rand() % 20) + 1; // 실행 시간: 1~20
+        int arrival = rand() % 3000;
+        int burst = (rand() % 45) + 5;
 
         fprintf(fp, "%d %d %d\n", pid, arrival, burst);
         count++;
